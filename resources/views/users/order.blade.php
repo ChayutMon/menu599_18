@@ -161,8 +161,9 @@ $config = Config::first();
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-12">
-                        <label for="silp" class="form-label d-flex justify-content-start">แนบสลิป : </label>
-                        <input type="file" class="form-control" id="silp" name="silp" required accept="image/jpeg, image/png">
+                        <label for="silp" class="form-label d-flex justify-content-start">แนบสลิป (ไม่บังคับ) : </label>
+                        <input type="file" class="form-control" id="silp" name="silp" accept="image/jpeg, image/png">
+                        <small class="form-text text-muted">* สามารถยืนยันการชำระเงินได้โดยไม่ต้องแนบสลิป</small>
                     </div>
                 </div>
             </div>
@@ -216,18 +217,18 @@ $config = Config::first();
         confirmButton.addEventListener('click', function(event) {
             event.preventDefault();
 
+            Swal.showLoading();
+            
+            const formData = new FormData();
             const fileInput = document.getElementById('silp');
             const file = fileInput.files[0];
-
-            if (!file) {
-                Swal.fire("กรุณาแนบสลิปก่อน", "", "warning");
-                return;
-            }
-
-            Swal.showLoading();
-            const formData = new FormData();
+            
             formData.append('remark', $('#remark').val());
-            formData.append('silp', file);
+            
+            
+            if (file) {
+                formData.append('silp', file);
+            }
 
             $.ajax({
                 type: "POST",
