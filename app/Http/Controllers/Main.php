@@ -238,55 +238,44 @@ class Main extends Controller
         'status' => false,
         'message' => 'สั่งออเดอร์ไม่สำเร็จ',
     ];
-    
-    $orderData = $request->input('orderData');
+
     $remark = $request->input('remark');
-    
-    // เปลี่ยนการ validate ให้ไฟล์เป็น optional
+
     $request->validate([
-        'silp' => 'nullable|image|mimes:jpeg,png|max:2048', // เปลี่ยนจาก required เป็น nullable
+        'silp' => 'nullable|image|mimes:jpeg,png|max:2048',
     ]);
-    
-    $item = array();
-    $total = 0;
 
     if (session('table_id')) {
-        $order = Orders::where('table_id', session('table_id'))->whereIn('status', [1, 2])->get();
-        
-        foreach ($order as $value) {
-            $value->status = 4;
-            
+        $orders = Orders::where('table_id', session('table_id'))
+                        ->whereIn('status', [1, 2])
+                        ->get();
+
+        foreach ($orders as $order) {
+            $order->status = 4;
+
             if (!empty($remark)) {
-                $value->remark = $remark;
+                $order->remark = $remark;
             }
-            
+
             if ($request->hasFile('silp')) {
                 $file = $request->file('silp');
                 $filename = time() . '_' . $file->getClientOriginalName();
                 $path = $file->storeAs('image', $filename, 'public');
-                $value->image = $path;
+                $order->image = $path;
             }
-            
-            if ($value->save()) {
-                foreach ($item as $rs) {
-                    $orderdetail = new OrdersDetails();
-                    $orderdetail->order_id = $value->id; 
-                    $orderdetail->menu_id = $rs['id'];
-                    $orderdetail->option_id = $rs['option'];
-                    $orderdetail->quantity = $rs['qty'];
-                    $orderdetail->price = $rs['price'];
-                    $orderdetail->save();
-                }
-            }
+
+            $order->save();
         }
-        
+
         event(new OrderCreated(['📦 มีออเดอร์ใหม่']));
+
         $data = [
             'status' => true,
             'message' => 'ยืนยันการชำระเงินเรียบร้อยแล้ว',
         ];
     }
-    
+
     return response()->json($data);
 }
+
 }
